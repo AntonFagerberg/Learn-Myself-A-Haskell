@@ -1,4 +1,4 @@
-import Data.List (find, delete)
+import Data.List (find, delete, (\\))
 import System.Random
 maxi :: Ord a => a -> a -> a
 maxi x y
@@ -49,24 +49,69 @@ f1 x y = foldr (:) x y
 f2 x y = foldr (const (f1 x)) [] y
 f3 x y = foldr (const (f2 x)) [()] y
 
-{-- snippet RandomState --}
-type RandomState a = State StdGen a
-{-- /snippet RandomState --}
+data TrafficLight = Red | Yellow | Green  
+instance Eq TrafficLight where  
+    Red == Red = True  
+    Green == Green = True  
+    Yellow == Yellow = True  
+    _ == _ = False 
 
-{-- snippet getRandom --}
-getRandom :: Random a => RandomState a
-getRandom =
-  get >>= \gen ->
-  let (val, gen') = random gen in
-  put gen' >>
-  return val
-{-- /snippet getRandom --}
+instance Show TrafficLight where  
+  show Red = "Red light"  
+  show Yellow = "Yellow light"  
+  show Green = "Green light"  
 
-{-- snippet getRandomDo --}
-getRandomDo :: Random a => RandomState a
-getRandomDo = do
-  gen <- get
-  let (val, gen') = random gen
-  put gen'
-  return val
-{-- /snippet getRandomDo --}
+f :: (Monad m, Num b) => m b -> m b -> m b
+f x y = do
+  a <- x
+  b <- y
+  return (a*b)
+
+--g :: [(a, b)]
+g (x:_) = [curry x]
+
+--filter' :: (x -> Bool) -> [x] -> [x]
+filter' p = foldr (\x acc -> if p x then x:acc else acc) []
+
+h [] = [[]]
+h xs = concat [map (x:) (h (xs \\ [x])) | x <- xs]
+
+oneOf :: Bool -> Bool -> Bool -> Bool
+oneOf a b c = case (a,b,c) of
+  (False, False, _) -> c
+  (_, False, False) -> a
+  (False, _, False) -> b
+  (_, _, _) -> False
+
+l = [(1, 2), (3, 4), (5, 6)]
+
+ff :: Eq b => b -> Maybe a -> (b, a) -> Maybe a
+ff key acc x@(k,v) =
+  case acc of
+    (Just x) -> (Just x)
+    Nothing  -> check
+  where check
+          | key == k  = (Just v)
+          | otherwise = Nothing
+
+e k = do
+  x <- k
+  Nothing
+  return False
+
+mfmap f m = do
+  v <- m
+  return (f v)
+
+q [] = []
+q (x:xs) = x : q (filter (/=x) xs)
+
+a x = do
+  v <- x
+  [v]
+
+
+f' :: (Eq a) => [a] -> [a] -> [a]
+f' = filter . flip elem
+
+f'' s1 s2 = [s | s <- s2, elem s s1]
